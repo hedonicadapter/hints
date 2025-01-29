@@ -253,7 +253,7 @@ def get_window_system() -> Type[WindowSystem]:
     window_system_type = get_window_system_type()
 
     # add new waland wms here, then add a match case below to import the class
-    supported_wayland_wms = {"sway", "Hyprland"}
+    supported_wayland_wms = {"sway", "Hyprland", ".Hyprland-wrapp"}
 
     window_system: Type[WindowSystem] | None = None
 
@@ -262,16 +262,10 @@ def get_window_system() -> Type[WindowSystem]:
     if window_system_type == WindowSystemType.WAYLAND:
 
         # Check if there is a process running that matches the supported_wayland_wms
-        supported_wayland_wms = {
-            "sway": "sway",
-            "Hyprland": "Hyprland",
-            ".Hyprland.wrapp": "Hyprland"
-        }
-
         wayland_wm = (
             run(
-                "ps -e -o comm | grep -m 1 -o -E -e"
-                + " ".join([f" '^\.?{wm}.*$'" for wm in supported_wayland_wms.keys()]),
+                "ps -e -o comm | grep -m 1 -o -E "
+                + " ".join([f"-e '^{wm}$'" for wm in supported_wayland_wms]),
                 capture_output=True,
                 shell=True,
             )
@@ -279,17 +273,19 @@ def get_window_system() -> Type[WindowSystem]:
             .strip()
         )
 
-        window_system_name = supported_wayland_wms.get(wayland_wm)
-
-        match window_system_name:
+        match wayland_wm:
             case "sway":
                 from hints.window_systems.sway import Sway as window_system
             case "Hyprland":
-                from hints.window_systems.hyprland import Hyprland as window_system
+                from hints.window_systems.hyprland import \
+                    Hyprland as window_system
+            case ".Hyprland-wrapp":
+                from hints.window_systems.hyprland import \
+                    Hyprland as window_system
 
     if not window_system:
         # adding x11 for an acurate report of the supported window systems
-        supported_wayland_wms["x11"] = "x11"
+        supported_wayland_wms.add("x11")
         raise WindowSystemNotSupported(supported_wayland_wms)
 
     return window_system
