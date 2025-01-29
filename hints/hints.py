@@ -264,7 +264,7 @@ def get_window_system() -> Type[WindowSystem]:
         # Check if there is a process running that matches the supported_wayland_wms
         wayland_wm = (
             run(
-                "ps -e -o comm | grep -m 1 -o -E -e"
+                "ps -e -o comm | grep -m 1 -o -E -e "
                 + " ".join([f"'^\.?{wm}.*$'" for wm in supported_wayland_wms]),
                 capture_output=True,
                 shell=True,
@@ -273,12 +273,18 @@ def get_window_system() -> Type[WindowSystem]:
             .strip()
         )
 
+        if wayland_wm:
+            wayland_wm = wayland_wm.lstrip('.')
+            for wm in supported_wayland_wms:
+                if wayland_wm.startswith(wm):
+                    wayland_wm = wm
+                    break
+
         match wayland_wm:
             case "sway":
                 from hints.window_systems.sway import Sway as window_system
             case "Hyprland":
-                from hints.window_systems.hyprland import \
-                    Hyprland as window_system
+                from hints.window_systems.hyprland import Hyprland as window_system
 
     if not window_system:
         # adding x11 for an acurate report of the supported window systems
