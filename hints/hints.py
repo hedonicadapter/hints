@@ -289,7 +289,7 @@ def get_window_system() -> Type[WindowSystem]:
 
     if not window_system:
         # adding x11 for an acurate report of the supported window systems
-        supported_wayland_wms.add("x11")
+        supported_wayland_wms["x11"] = "x11"
         raise WindowSystemNotSupported(supported_wayland_wms)
 
     return window_system
